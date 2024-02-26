@@ -26,6 +26,7 @@
   box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
   max-width: 20rem;
   width: 100%;
+  z-index: 1;
 
   display: flex;
   flex-direction: column;
