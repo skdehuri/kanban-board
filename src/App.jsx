@@ -14,9 +14,26 @@ import CheckCircle from './assets/check-circle.svg'
 import HalfCircle from './assets/circle-half.svg'
 import Circle from './assets/circle.svg'
 import FilterCircle from './assets/filter-circle.svg'
+import Card from './components/Card'
 
 
 export const BoardContext = createContext()
+
+export const STATUS_PARAMETERS = {
+    'Backlog': { name: 'Backlog', icon: FilterCircle },
+    'Todo': { name: 'Todo', icon: Circle },
+    'In progress': { name: 'In progress', icon: HalfCircle },
+    'Done': { name: 'Done', icon: CheckCircle },
+    'Canceled': { name: 'Canceled', icon: XCircle }
+}
+
+export const PRIORITY_PARAMETERS = {
+    0: { name: 'Urgent', icon: Exclamation },
+    1: { name: 'High', icon: Reception4 },
+    2: { name: 'Medium', icon: Reception3 },
+    3: { name: 'Low', icon: Reception2 },
+    4: { name: 'No Priority', icon: Reception1 }
+}
 
 function App() {
 
@@ -25,24 +42,23 @@ function App() {
     const [filters, setFilters] = useState({ groupBy: 'status', orderBy: 'priority' })
     const [filteredHeaders, setFilteredHeaders] = useState([])
     const [userParameters, setUserParameters] = useState([])
-
-    const STATUS_PARAMETERS = {
-        'Backlog': { name: 'Backlog', icon: FilterCircle },
-        'Todo': { name: 'Todo', icon: Circle },
-        'In progress': { name: 'In progress', icon: HalfCircle },
-        'Done': { name: 'Done', icon: CheckCircle },
-        'Canceled': { name: 'Canceled', icon: XCircle }
-    }
-
-    const PRIORITY_PARAMETERS = {
-        0: { name: 'Urgent', icon: Exclamation },
-        1: { name: 'High', icon: Reception4 },
-        2: { name: 'Medium', icon: Reception3 },
-        3: { name: 'Low', icon: Reception2 },
-        4: { name: 'No Priority', icon: Reception1 }
-    }
+    const [responseErrorStatus, setResponseErrorStatus] = useState(false)
+    const [responseLoadingStatus, setResponseLoadingStatus] = useState(true)
 
     useEffect(() => {
+
+        fetch('https://api.quicksell.co/v1/internal/frontend-assignment')
+            .then(response => response.json())
+            .then(data => {
+                setResponseData(data)
+                setResponseErrorStatus(false)
+                setResponseLoadingStatus(false)
+            })
+            .catch(error => {
+                setResponseErrorStatus(true)
+                setResponseLoadingStatus(false)
+            })
+
         setResponseData(MockData)
         applyFiltersAndSetResults(MockData)
 
@@ -56,6 +72,8 @@ function App() {
         applyFiltersAndSetResults(MockData)
     }, [filters])
 
+
+    // Appling the filters here and building heading and board data
     const applyFiltersAndSetResults = (response) => {
         const { tickets = [] } = response
         const { groupBy, orderBy } = filters
@@ -111,14 +129,6 @@ function App() {
         } else if (groupBy === 'priority') {
             columns = Object.keys(PRIORITY_PARAMETERS).map(item => ({ name: PRIORITY_PARAMETERS[item]['name'], icon: PRIORITY_PARAMETERS[item]['icon'], key: item }))
         } else if (groupBy === 'userId') {
-            const { users } = response
-
-
-
-            // const userImagePromises = users.map(item => fetch(`https://ui-avatars.com/api/?name=${item.name}&color=fff&background=${getImageBackgroundColor()}`))
-
-            // console.log('user images - ', userImagePromises)
-
             columns = userMappings
         }
 
@@ -133,21 +143,43 @@ function App() {
         return imageBackgroundColors[randomNumber]
     }
 
-    return (
-        <BoardContext.Provider value={{ filters, setFilters }}>
-            <div className='navbar'>
-                <div className='p-relative'>
-                    <Popover />
+    const renderBoard = () => {
+        if (responseLoadingStatus) {
+            return (
+                <div className='d-flex'>
+                    <span>
+                        Loading
+                    </span>
                 </div>
-            </div>
-            <div className='board-container'>
+            )
+        }
+
+        if (responseErrorStatus) {
+            return (
+                <div className='d-flex'>
+                    <span>
+                        Something went wrong while getting data
+                    </span>
+                </div>
+            )
+        }
+
+        return (
+            <>
                 {
                     filteredHeaders.map(item => (
                         <div className='board-columns' key={'boardColumns_' + item.name}>
                             <div className='card-heading'>
                                 <div className='card-heading-items'>
                                     <div className='d-flex'>
-                                        <img className={item.iconClass} src={item.icon} alt="" />
+                                        {
+                                            filters.groupBy === 'userId' ?
+                                                <div className='user-image-wrapper'>
+                                                    <img className={userParameters[item.id].iconClass} src={userParameters[item.id].icon} alt="" />
+                                                    <div className={`user-availability ${userParameters[item.id].available ? 'available' : 'offline'}`}></div>
+                                                </div> : <img className={item.iconClass} src={item.icon} alt="" />
+                                        }
+
                                     </div>
                                     <div>{item.name}</div>
                                     <div className='color-grey'>{(filteredData[item.key] || []).length}</div>
@@ -158,51 +190,24 @@ function App() {
                                 </div>
                             </div>
                             <div className='card-container'>{(filteredData[item.key] || []).map(item => (
-                                <div className='card' key={item.id}>
-                                    <div className='card-section-wrapper'>
-                                        <div className='card-section-1'>
-                                            <div>{item.id}</div>
-                                        </div>
-                                        <div className='card-section-2'>
-                                            {
-                                                filters.groupBy != 'status' ? <div>
-                                                    <img className='card-title-icon' src={STATUS_PARAMETERS[item.status].icon} alt="" />
-                                                    <div></div>
-                                                </div> : null
-                                            }
-
-                                            <div className='card-title'>{item.title}</div>
-                                        </div>
-                                        <div className='card-section-3'>
-                                            {
-                                                filters.groupBy != 'priority' ?
-                                                    <div className='card-priority-icon'>
-                                                        <img src={PRIORITY_PARAMETERS[item.priority].icon} alt="" />
-                                                    </div> : null
-                                            }
-                                            {item.tag.map(tagValues => (
-                                                <div className='card-tag-icon' key={tagValues}>
-                                                    <div className='card-tag-dot'></div>
-                                                    <div>{tagValues}</div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        {
-                                            filters.groupBy != 'userId' ?
-                                                <div className='user-image-wrapper'>
-                                                    <img className={userParameters[item.userId].iconClass} src={userParameters[item.userId].icon} alt="" />
-                                                    <div className={`user-availability ${userParameters[item.userId].available ? 'available' : 'offline'}`}></div>
-                                                </div> : null
-                                        }
-
-                                    </div>
-                                </div>
+                                <Card key={item.id} item={item} userParameters={userParameters} />
                             ))}</div>
                         </div>
                     ))
                 }
+            </>
+        )
+    }
+
+    return (
+        <BoardContext.Provider value={{ filters, setFilters }}>
+            <div className='navbar'>
+                <div className='p-relative'>
+                    <Popover />
+                </div>
+            </div>
+            <div className='board-container'>
+                {renderBoard()}
             </div>
         </BoardContext.Provider>
     )
