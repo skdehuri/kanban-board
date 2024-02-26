@@ -167,6 +167,7 @@ function App() {
                                             {
                                                 filters.groupBy != 'status' ? <div>
                                                     <img className='card-title-icon' src={STATUS_PARAMETERS[item.status].icon} alt="" />
+                                                    <div></div>
                                                 </div> : null
                                             }
 
@@ -189,7 +190,11 @@ function App() {
                                     </div>
                                     <div>
                                         {
-                                            filters.groupBy != 'userId' ? <div><img className={userParameters[item.userId].iconClass} src={userParameters[item.userId].icon} alt="" /></div> : null
+                                            filters.groupBy != 'userId' ?
+                                                <div className='user-image-wrapper'>
+                                                    <img className={userParameters[item.userId].iconClass} src={userParameters[item.userId].icon} alt="" />
+                                                    <div className={`user-availability ${userParameters[item.userId].available ? 'available' : 'offline'}`}></div>
+                                                </div> : null
                                         }
 
                                     </div>

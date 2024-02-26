@@ -165,6 +165,28 @@ select {
   gap: 0.5rem;
 }
 
+.user-image-wrapper {
+  position: relative;
+}
+
+.user-availability {
+  height: 0.75rem;
+  width: 0.75rem;
+  border-radius: 8px;
+  position: absolute;
+  right: -5px;
+  bottom: 0.15rem;
+  border: 1px solid #fff;
+}
+
+.available {
+  background-color: green;
+}
+
+.offline {
+  background-color: lightgray;
+}
+
 .board-columns {
   width: 25rem;
 }
