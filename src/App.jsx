@@ -175,8 +175,11 @@ function App() {
                                         {
                                             filters.groupBy === 'userId' ?
                                                 <div className='user-image-wrapper'>
-                                                    <img className={userParameters[item.id].iconClass} src={userParameters[item.id].icon} alt="" />
-                                                    <div className={`user-availability ${userParameters[item.id].available ? 'available' : 'offline'}`}></div>
+                                                    {userParameters[item.id] ?
+                                                        <>
+                                                            <img className={userParameters[item.id].iconClass} src={userParameters[item.id].icon} alt="" />
+                                                            <div className={`user-availability ${userParameters[item.id].available ? 'available' : 'offline'}`}></div>
+                                                        </> : null}
                                                 </div> : <img className={item.iconClass} src={item.icon} alt="" />
                                         }
 
